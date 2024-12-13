@@ -7,25 +7,29 @@ const CoupledSpring = () => {
   const [springState, setSpringState] = useState({
     // Mass 1 properties
     mass1: {
-      position: 100,
+      anchor: 50,
+      restLength: 100,
+      position: 150, // anchor + restLength at equilibrium
       velocity: 0,
-      k: 0.1, // spring constant for left spring
+      k: 0.1,
+      externalForce: 0,
     },
     // Mass 2 properties
     mass2: {
-      position: 200,
+      anchor: 300,
+      restLength: 100,
+      position: 200, // anchor - restLength at equilibrium
       velocity: 0,
-      k: 0.1, // spring constant for right spring
+      k: 0.1,
+      externalForce: 0,
     },
     // Coupling spring properties
     coupling: {
-      k: 0.05, // coupling spring constant
-      naturalLength: 50, // natural length between masses
+      k: 0.05,
+      restLength: 50, // natural length between masses at equilibrium
     },
     // Global properties
     damping: 0.98,
-    leftAnchor: 50, // x-position of left wall anchor
-    rightAnchor: 300, // x-position of right wall anchor
   });
 
   const [positionHistory, setPositionHistory] = useState([]);
@@ -33,24 +37,30 @@ const CoupledSpring = () => {
   const maxDataPoints = 200;
 
   useEffect(() => {
-    const updateSprings = () => {
-      const {mass1, mass2, coupling, damping, leftAnchor, rightAnchor} = springState;
+      const updateSprings = () => {
+      const {mass1, mass2, coupling, damping} = springState;
       
-      // Calculate forces on mass 1
-      const leftSpringForce = -mass1.k * (mass1.position - leftAnchor);
-      const couplingForce1 = -coupling.k * 
-        ((mass1.position - mass2.position) - coupling.naturalLength);
+      // Calculate displacements from equilibrium
+      const leftDisplacement = (mass1.position - mass1.anchor) - mass1.restLength;
+      const rightDisplacement = (mass2.position - mass2.anchor) + mass2.restLength;
+      const couplingDisplacement = (mass2.position - mass1.position) - coupling.restLength;
+
+      // Calculate forces (negative because spring forces oppose displacement)
+      const leftSpringForce = -mass1.k * leftDisplacement;
+      const rightSpringForce = -mass2.k * rightDisplacement;
       
-      // Calculate forces on mass 2
-      const rightSpringForce = -mass2.k * (mass2.position - rightAnchor);
-      const couplingForce2 = coupling.k * 
-        ((mass1.position - mass2.position) - coupling.naturalLength);
+      // Coupling forces are equal and opposite
+      const couplingForce = -coupling.k * couplingDisplacement;
+      
+      // Total forces include coupling forces
+      const totalForce1 = leftSpringForce + (-couplingForce) + mass1.externalForce;
+      const totalForce2 = rightSpringForce + couplingForce + mass2.externalForce;
       
       // Update velocities and positions
-      const newVelocity1 = (mass1.velocity + leftSpringForce + couplingForce1) * damping;
+      const newVelocity1 = (mass1.velocity + totalForce1) * damping;
       const newPosition1 = mass1.position + newVelocity1;
       
-      const newVelocity2 = (mass2.velocity + rightSpringForce + couplingForce2) * damping;
+      const newVelocity2 = (mass2.velocity + totalForce2) * damping;
       const newPosition2 = mass2.position + newVelocity2;
 
       setSpringState(prev => ({
@@ -72,8 +82,8 @@ const CoupledSpring = () => {
       setPositionHistory(prev => {
         const newPoint = {
           time: time + 1,
-          position1: newPosition1 - leftAnchor,
-          position2: newPosition2 - leftAnchor,
+          position1: leftDisplacement, // using the calculated displacement
+          position2: rightDisplacement, // using the calculated displacement
         };
         return [...prev, newPoint].slice(-maxDataPoints);
       });
@@ -99,7 +109,7 @@ const CoupledSpring = () => {
         .range([margin.left, width - margin.right]);
 
       const yScale = d3.scaleLinear()
-        .domain([-100, 300])
+        .domain([-100, 100])
         .range([height - margin.bottom, margin.top]);
 
       const line1 = d3.line()
@@ -167,8 +177,8 @@ const CoupledSpring = () => {
     
     const handleMouseMove = (e) => {
       const dx = e.clientX - startX;
-      const newPos = Math.max(springState.leftAnchor + 20, 
-        Math.min(springState.rightAnchor - 20, startPos + dx));
+      const newPos = Math.max(springState.mass1.anchor + 20, 
+        Math.min(springState.mass2.anchor - 20, startPos + dx));
       
       setSpringState(prev => ({
         ...prev,
@@ -189,6 +199,34 @@ const CoupledSpring = () => {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  // Draw equilibrium positions
+  const equilibriumPositions = () => {
+    const mass1Equilibrium = springState.mass1.anchor + springState.mass1.restLength;
+    const mass2Equilibrium = springState.mass2.anchor - springState.mass2.restLength;
+    return (
+      <>
+        <line 
+          x1={mass1Equilibrium} 
+          y1="20" 
+          x2={mass1Equilibrium} 
+          y2="80" 
+          stroke="gray" 
+          strokeWidth="1"
+          strokeDasharray="4"
+        />
+        <line 
+          x1={mass2Equilibrium} 
+          y1="20" 
+          x2={mass2Equilibrium} 
+          y2="80" 
+          stroke="gray" 
+          strokeWidth="1"
+          strokeDasharray="4"
+        />
+      </>
+    );
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -201,51 +239,48 @@ const CoupledSpring = () => {
                 className="w-full"
                 viewBox="0 0 400 100"
               >
-                {/* Left wall anchor */}
+                {/* Wall anchors */}
                 <line 
-                  x1={springState.leftAnchor} 
+                  x1={springState.mass1.anchor} 
                   y1="20" 
-                  x2={springState.leftAnchor} 
+                  x2={springState.mass1.anchor} 
+                  y2="80" 
+                  stroke="black" 
+                  strokeWidth="4"
+                />
+                <line 
+                  x1={springState.mass2.anchor} 
+                  y1="20" 
+                  x2={springState.mass2.anchor} 
                   y2="80" 
                   stroke="black" 
                   strokeWidth="4"
                 />
                 
-                {/* Right wall anchor */}
-                <line 
-                  x1={springState.rightAnchor} 
-                  y1="20" 
-                  x2={springState.rightAnchor} 
-                  y2="80" 
-                  stroke="black" 
-                  strokeWidth="4"
-                />
+                {/* Equilibrium position markers */}
+                {equilibriumPositions()}
                 
-                {/* Left spring */}
+                {/* Springs */}
                 <path
-                  d={generateSpringPath(springState.leftAnchor, springState.mass1.position)}
+                  d={generateSpringPath(springState.mass1.anchor, springState.mass1.position)}
                   fill="none"
                   stroke="blue"
                   strokeWidth="2"
                 />
-                
-                {/* Coupling spring */}
                 <path
                   d={generateSpringPath(springState.mass1.position, springState.mass2.position)}
                   fill="none"
                   stroke="purple"
                   strokeWidth="2"
                 />
-                
-                {/* Right spring */}
                 <path
-                  d={generateSpringPath(springState.mass2.position, springState.rightAnchor)}
+                  d={generateSpringPath(springState.mass2.position, springState.mass2.anchor)}
                   fill="none"
                   stroke="red"
                   strokeWidth="2"
                 />
                 
-                {/* Mass 1 */}
+                {/* Masses */}
                 <circle
                   cx={springState.mass1.position}
                   cy="50"
@@ -253,8 +288,6 @@ const CoupledSpring = () => {
                   className="fill-blue-600 cursor-grab active:cursor-grabbing"
                   onMouseDown={(e) => handleMouseDown(1, e)}
                 />
-                
-                {/* Mass 2 */}
                 <circle
                   cx={springState.mass2.position}
                   cy="50"
