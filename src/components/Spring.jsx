@@ -228,13 +228,13 @@ const Spring = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  External Force: {springState.externalForce.toFixed(3)}
+                  External Force: {springState.externalForce.toFixed(1)}
                 </label>
                 <input 
                   type="range"
-                  min="-1.0"
-                  max="1.0"
-                  step="0.01"
+                  min="-3.0"
+                  max="3.0"
+                  step="0.1"
                   value={springState.externalForce}
                   onChange={(e) => setSpringState(prev => ({
                     ...prev,
