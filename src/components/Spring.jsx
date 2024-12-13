@@ -9,7 +9,8 @@ const Spring = () => {
     currentLength: 100,
     k: 0.1,
     damping: 0.98,
-    velocity: 0
+    velocity: 0,
+    externalForce: 0
   });
   
   const [positionHistory, setPositionHistory] = useState([]);
@@ -18,11 +19,14 @@ const Spring = () => {
 
   useEffect(() => {
     const updateSpring = () => {
-      const force = -springState.k * (springState.currentLength - springState.restLength);
-      const newVelocity = springState.velocity + force;
+      // Spring force + external force
+      const springForce = -springState.k * (springState.currentLength - springState.restLength);
+      const totalForce = springForce + springState.externalForce;
+      
+      const newVelocity = springState.velocity + totalForce;
       const dampedVelocity = newVelocity * springState.damping;
       const newLength = springState.currentLength + dampedVelocity;
-
+    
       setSpringState(prev => ({
         ...prev,
         currentLength: newLength,
@@ -68,12 +72,12 @@ const Spring = () => {
         .x(d => xScale(d.time))
         .y(d => yScale(d.position));
 
-      const xAxis = d3.axisBottom(xScale);
-      const yAxis = d3.axisLeft(yScale);
+      const xAxis = d3.axisBottom(xScale).tickSize(0).tickFormat("");
+      const yAxis = d3.axisLeft(yScale).tickSize(0).tickFormat("");
 
       svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(xAxis);
+        .call(xAxis)
 
       svg.append("g")
         .attr("transform", `translate(${margin.left},0)`)
@@ -127,7 +131,7 @@ const Spring = () => {
     const startLength = springState.currentLength;
     
     const handleMouseMove = (e) => {
-      const dx = e.clientX - startX;
+      const dx = Math.min(50, e.clientX - startX); // limit the movement to 50px
       setSpringState(prev => ({
         ...prev,
         currentLength: Math.max(50, startLength + dx),
@@ -145,33 +149,103 @@ const Spring = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
+    <div className="w-full max-w-4xl mx-auto p-4">
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold mb-4">Interactive Spring</h2>
         <div className="border rounded p-4">
-          {/* Spring visualization */}
-          <svg
-            ref={svgRef}
-            className="w-full"
-            viewBox="0 0 400 100"
-            onMouseDown={handleMouseDown}
-          >
-            <circle cx="50" cy="50" r="5" className="fill-blue-600" />
-            <path
-              d={generateSpringPath()}
-              fill="none"
-              stroke="blue"
-              strokeWidth="3"
-              className="cursor-pointer"
-            />
-            <circle
-              cx={50 + springState.currentLength}
-              cy="50"
-              r="8"
-              className="fill-blue-600 cursor-grab active:cursor-grabbing"
-            />
-          </svg>
-          
+          {/* Spring and controls container */}
+          <div className="flex gap-6">
+            {/* Spring visualization container */}
+            <div className="flex-1">
+              <svg
+                ref={svgRef}
+                className="w-full"
+                viewBox="0 0 400 100"
+                onMouseDown={handleMouseDown}
+              >
+                <circle cx="50" cy="50" r="5" className="fill-blue-600" />
+                <path
+                  d={generateSpringPath()}
+                  fill="none"
+                  stroke="blue"
+                  strokeWidth="3"
+                  className="cursor-pointer"
+                />
+                <circle
+                  cx={50 + springState.currentLength}
+                  cy="50"
+                  r="8"
+                  className="fill-blue-600 cursor-grab active:cursor-grabbing"
+                />
+                <line
+                  x1={50 + springState.restLength}
+                  y1="20"
+                  x2={50 + springState.restLength}
+                  y2="80"
+                  stroke="gray"
+                  strokeWidth="1"
+                  strokeDasharray="4"
+                />
+              </svg>
+            </div>
+
+            {/* Controls container */}
+            <div className="w-64 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Spring Constant (k): {springState.k.toFixed(3)}
+                </label>
+                <input 
+                  type="range"
+                  min="0.01"
+                  max="0.5"
+                  step="0.01"
+                  value={springState.k}
+                  onChange={(e) => setSpringState(prev => ({
+                    ...prev,
+                    k: parseFloat(e.target.value)
+                  }))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Damping Factor: {springState.damping.toFixed(3)}
+                </label>
+                <input 
+                  type="range"
+                  min="0.9"
+                  max="0.999"
+                  step="0.001"
+                  value={springState.damping}
+                  onChange={(e) => setSpringState(prev => ({
+                    ...prev,
+                    damping: parseFloat(e.target.value)
+                  }))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  External Force: {springState.externalForce.toFixed(3)}
+                </label>
+                <input 
+                  type="range"
+                  min="-1.0"
+                  max="1.0"
+                  step="0.01"
+                  value={springState.externalForce}
+                  onChange={(e) => setSpringState(prev => ({
+                    ...prev,
+                    externalForce: parseFloat(e.target.value)
+                  }))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Position graph */}
           <div className="mt-4">
             <h3 className="text-lg font-semibold mb-2">Displacement vs Time</h3>
