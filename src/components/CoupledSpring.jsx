@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DisplacementGraph from './DisplacementGraph';
 import SpringControls from './CoupledSpringControls';
+import SpringVisualisation from './CoupledSpringVisualisation';
 import { formatDisplacement } from '../utils/springUtils';
 import * as d3 from 'd3';
 
 const CoupledSpring = () => {
-  const svgRef = useRef(null);
 
   const [springState, setSpringState] = useState({
     // Mass 1 properties
@@ -149,7 +149,7 @@ const CoupledSpring = () => {
       <>
         <line 
           x1={mass1Equilibrium} 
-          y1="20" 
+g         y1="20" 
           x2={mass1Equilibrium} 
           y2="80" 
           stroke="gray" 
@@ -175,71 +175,10 @@ const CoupledSpring = () => {
         <h2 className="text-xl font-bold mb-4">Coupled Spring System</h2>
         <div className="border rounded p-4">
           <div className="flex gap-6">
-            <div className="flex-1">
-              <svg
-                ref={svgRef}
-                className="w-full"
-                viewBox="0 0 400 100"
-              >
-                {/* Wall anchors */}
-                <line 
-                  x1={springState.mass1.anchor} 
-                  y1="20" 
-                  x2={springState.mass1.anchor} 
-                  y2="80" 
-                  stroke="black" 
-                  strokeWidth="4"
-                />
-                <line 
-                  x1={springState.mass2.anchor} 
-                  y1="20" 
-                  x2={springState.mass2.anchor} 
-                  y2="80" 
-                  stroke="black" 
-                  strokeWidth="4"
-                />
-                
-                {/* Equilibrium position markers */}
-                {equilibriumPositions()}
-                
-                {/* Springs */}
-                <path
-                  d={generateSpringPath(springState.mass1.anchor, springState.mass1.position)}
-                  fill="none"
-                  stroke="blue"
-                  strokeWidth="2"
-                />
-                <path
-                  d={generateSpringPath(springState.mass1.position, springState.mass2.position)}
-                  fill="none"
-                  stroke="purple"
-                  strokeWidth="2"
-                />
-                <path
-                  d={generateSpringPath(springState.mass2.position, springState.mass2.anchor)}
-                  fill="none"
-                  stroke="red"
-                  strokeWidth="2"
-                />
-                
-                {/* Masses */}
-                <circle
-                  cx={springState.mass1.position}
-                  cy="50"
-                  r="8"
-                  className="fill-blue-600 cursor-grab active:cursor-grabbing"
-                  onMouseDown={(e) => handleMouseDown(1, e)}
-                />
-                <circle
-                  cx={springState.mass2.position}
-                  cy="50"
-                  r="8"
-                  className="fill-red-600 cursor-grab active:cursor-grabbing"
-                  onMouseDown={(e) => handleMouseDown(2, e)}
-                />
-              </svg>
-            </div>
-
+            <SpringVisualisation
+              springState={springState}
+              handleMouseDown={handleMouseDown}
+            />
             <SpringControls
               springState={springState}
               setSpringState={setSpringState}
