@@ -4,6 +4,16 @@ import * as d3 from 'd3';
 const CoupledSpring = () => {
   const svgRef = useRef(null);
   const graphRef = useRef(null);
+
+  const DISPLACEMENT_THRESHOLD = 0.05;  // Values smaller than this will be rounded to zero
+
+  const formatDisplacement = (value) => {
+    if (Math.abs(value) < DISPLACEMENT_THRESHOLD) {
+      return '\u00A00.0';  // Always show positive zero
+    }
+    return `${value >= 0 ? '\u00A0' : '-'}${Math.abs(value).toFixed(1)}`;
+  };
+
   const [springState, setSpringState] = useState({
     // Mass 1 properties
     mass1: {
@@ -341,7 +351,7 @@ const CoupledSpring = () => {
                 </label>
                 <input 
                   type="range"
-                  min="0.01"
+                  min="0.0"
                   max="0.5"
                   step="0.01"
                   value={springState.coupling.k}
@@ -370,8 +380,71 @@ const CoupledSpring = () => {
                   className="w-full"
                 />
               </div>
+
+              {/* New External Force Controls */}
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-semibold mb-2">External Forces</h3>
+                
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Force on Mass 1: {springState.mass1.externalForce.toFixed(1)}
+                  </label>
+                  <input 
+                    type="range"
+                    min="-5"
+                    max="5"
+                    step="0.1"
+                    value={springState.mass1.externalForce}
+                    onChange={(e) => setSpringState(prev => ({
+                      ...prev,
+                      mass1: { 
+                        ...prev.mass1, 
+                        externalForce: parseFloat(e.target.value)
+                      }
+                    }))}
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Force on Mass 2: {springState.mass2.externalForce.toFixed(1)}
+                  </label>
+                  <input 
+                    type="range"
+                    min="-5"
+                    max="5"
+                    step="0.1"
+                    value={springState.mass2.externalForce}
+                    onChange={(e) => setSpringState(prev => ({
+                      ...prev,
+                      mass2: { 
+                        ...prev.mass2, 
+                        externalForce: parseFloat(e.target.value)
+                      }
+                    }))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </div>
           </div>
+
+          <div className="mt-4 text-sm text-gray-600 space-y-1 font-mono">
+            <div>
+              Mass 1 displacement: 
+              <span style={{ display: 'inline-block', width: '4ch' }}>
+                {formatDisplacement((springState.mass1.position - springState.mass1.anchor) - springState.mass1.restLength)}
+              </span>
+            </div>
+            <div>
+              Mass 2 displacement: 
+              <span style={{ display: 'inline-block', width: '4ch' }}>
+                {formatDisplacement((springState.mass2.position - springState.mass2.anchor) + springState.mass2.restLength)}
+              </span>
+            </div>
+          </div>
+          
 
           <div className="mt-4">
             <h3 className="text-lg font-semibold mb-2">Displacement vs Time</h3>
