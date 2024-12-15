@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
-import { useSpringPhysics } from '../hooks/useSpringPhysics';
+import { useSpringPhysics } from '../hooks/useStochSpringPhysics';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import SpringVisualisation from './CoupledSpringVisualisation';
 import SpringControls from './CoupledSpringControls';
-import PrintDisplacement from './PrintDisplacement';
+import { PrintDisplacement, PrintAverageDisplacement, PrintCovarianceMatrix} from './PrintDisplacement';
 import DisplacementGraph from './DisplacementGraph';
 
 const CoupledSpring = () => {
   const { springState, setSpringState, updateSprings } = useSpringPhysics();
-  const maxDataPoints = 200;
+  const maxDataPoints = 400;
   const { positionHistory, updateHistory } = usePositionHistory(maxDataPoints);
 
   useEffect(() => {
@@ -66,6 +66,14 @@ const CoupledSpring = () => {
 
           <PrintDisplacement 
             springState={springState} 
+          />
+
+          <PrintAverageDisplacement
+            positionHistory={positionHistory}
+          />
+
+          <PrintCovarianceMatrix
+            positionHistory={positionHistory}
           />
 
           <DisplacementGraph
