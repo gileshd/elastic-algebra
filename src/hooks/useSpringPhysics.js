@@ -2,17 +2,13 @@ import { useState } from 'react';
 
 const INITIAL_STATE = {
   mass1: {
-    anchor: 50,
-    restLength: 100,
-    position: 150,
+    displacement: 0,
     velocity: 0,
     k: 0.1,
     externalForce: 0,
   },
   mass2: {
-    anchor: 300,
-    restLength: 100,
-    position: 200,
+    displacement: 0,
     velocity: 0,
     k: 0.1,
     externalForce: 0,
@@ -30,13 +26,10 @@ export const useSpringPhysics = () => {
   const updateSprings = () => {
     const { mass1, mass2, coupling, damping } = springState;
     
-    const leftDisplacement = (mass1.position - mass1.anchor) - mass1.restLength;
-    const rightDisplacement = (mass2.position - mass2.anchor) + mass2.restLength;
-    const couplingDisplacement = (mass2.position - mass1.position) - coupling.restLength;
-
-    const leftSpringForce = -mass1.k * leftDisplacement;
-    const rightSpringForce = -mass2.k * rightDisplacement;
-    const couplingForce = -coupling.k * couplingDisplacement;
+    // Forces are now directly proportional to displacements
+    const leftSpringForce = -mass1.k * mass1.displacement;
+    const rightSpringForce = -mass2.k * mass2.displacement;
+    const couplingForce = -coupling.k * (mass2.displacement - mass1.displacement);
     
     const totalForce1 = leftSpringForce + (-couplingForce) + mass1.externalForce;
     const totalForce2 = rightSpringForce + couplingForce + mass2.externalForce;
@@ -48,19 +41,19 @@ export const useSpringPhysics = () => {
       ...prev,
       mass1: {
         ...prev.mass1,
-        position: mass1.position + newVelocity1,
+        displacement: mass1.displacement + newVelocity1,
         velocity: newVelocity1,
       },
       mass2: {
         ...prev.mass2,
-        position: mass2.position + newVelocity2,
+        displacement: mass2.displacement + newVelocity2,
         velocity: newVelocity2,
       },
     }));
 
     return {
-      leftDisplacement,
-      rightDisplacement,
+      leftDisplacement: mass1.displacement,
+      rightDisplacement: mass2.displacement,
     };
   };
 

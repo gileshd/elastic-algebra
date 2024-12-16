@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useSpringPhysics } from '../hooks/useStochSpringPhysics';
+import { useSpringPhysics } from '../hooks/useSpringPhysics';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import SpringVisualisation from './CoupledSpringVisualisation';
 import SpringControls from './CoupledSpringControls';
@@ -22,18 +22,19 @@ const CoupledSpring = () => {
 
   const handleMouseDown = (massIndex, e) => {
     const startX = e.clientX;
-    const startPos = massIndex === 1 ? springState.mass1.position : springState.mass2.position;
+    const startDisplacement = massIndex === 1 
+      ? springState.mass1.displacement 
+      : springState.mass2.displacement;
     
     const handleMouseMove = (e) => {
-      const dx = e.clientX - startX;
-      const newPos = Math.max(springState.mass1.anchor + 20, 
-        Math.min(springState.mass2.anchor - 20, startPos + dx));
-      
+      const dx = (e.clientX - startX) * 0.2;
+      const newDisplacement = startDisplacement + dx
+
       setSpringState(prev => ({
         ...prev,
-        [massIndex === 1 ? 'mass1' : 'mass2']: {
-          ...prev[massIndex === 1 ? 'mass1' : 'mass2'],
-          position: newPos,
+        [`mass${massIndex}`]: {
+          ...prev[`mass${massIndex}`],
+          displacement: newDisplacement,
           velocity: 0
         }
       }));
