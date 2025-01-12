@@ -8,8 +8,7 @@ const VISUAL_CONFIG = {
   mass2RestLength: 100,
 };
 
-export const convertToVisualCoords = (massIndex, displacement) => {
-  if (massIndex === 1) {
+export const convertToVisualCoords = (massIndex, displacement) => { if (massIndex === 1) {
     return VISUAL_CONFIG.mass1Anchor + VISUAL_CONFIG.mass1RestLength + displacement;
   }
   return VISUAL_CONFIG.mass2Anchor - VISUAL_CONFIG.mass2RestLength + displacement;

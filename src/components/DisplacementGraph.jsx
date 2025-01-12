@@ -12,6 +12,8 @@ const DisplacementGraph = ({ positionHistory, maxDataPoints }) => {
       const margin = { top: 20, right: 20, bottom: 30, left: 40 };
       
       svg.selectAll("*").remove();
+
+      positionHistory = positionHistory.slice(-maxDataPoints)
       
       const currentTime = positionHistory[positionHistory.length - 1].time;
       

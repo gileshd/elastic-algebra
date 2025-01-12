@@ -9,7 +9,7 @@ import PhaseSpaceGraph from './PhaseSpaceGraph';
 
 const CoupledSpring = () => {
   const { springState, setSpringState, updateSprings } = useSpringPhysics();
-  const maxDataPoints = 400;
+  const maxDataPoints = 1000;
   const { positionHistory, updateHistory } = usePositionHistory(maxDataPoints);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const CoupledSpring = () => {
 
           <DisplacementGraph
             positionHistory={positionHistory}
-            maxDataPoints={maxDataPoints}
+            maxDataPoints={400}
           />
           <PhaseSpaceGraph
             positionHistory={positionHistory}
