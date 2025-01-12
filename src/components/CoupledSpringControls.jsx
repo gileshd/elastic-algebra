@@ -59,17 +59,35 @@ const SpringControls = ({ springState, setSpringState }) => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Damping Factor: {springState.damping.toFixed(3)}
+          Damping Factor: {springState.gamma.toFixed(3)}
         </label>
         <input
           type="range"
-          min="0.9"
+          min="0.001"
           max="0.999"
           step="0.001"
-          value={springState.damping}
+          value={springState.gamma}
           onChange={(e) => setSpringState(prev => ({
             ...prev,
-            damping: parseFloat(e.target.value)
+            gamma: parseFloat(e.target.value)
+          }))}
+          className="w-full"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Temperature: {springState.temperature.toFixed(3)}
+        </label>
+        <input
+          type="range"
+          min="0.001"
+          max="0.999"
+          step="0.001"
+          value={springState.temperature}
+          onChange={(e) => setSpringState(prev => ({
+            ...prev,
+            temperature: parseFloat(e.target.value)
           }))}
           className="w-full"
         />
